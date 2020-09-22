@@ -48,8 +48,9 @@ type SAS struct {
 
 // PTMs represents post translational modifications from the entry.
 type PTMs struct {
-	DisulfideBonds []Disulfide     `json:"disulfideBonds"`
-	Glycosilations []Glycosilation `json:"glycosilationSites"`
+	DisulfideBonds   []Disulfide       `json:"disulfideBonds"`
+	Glycosilations   []Glycosilation   `json:"glycosilationSites"`
+	ModifiedResidues []ModifiedResidue `json:"modifiedResidues"`
 }
 
 // Disulfide represents a single disulfide bond between positions.
@@ -59,6 +60,12 @@ type Disulfide struct {
 
 // Glycosilation represents a glycosilation site.
 type Glycosilation struct {
+	Position int64  `json:"position"`
+	Note     string `json:"note"`
+}
+
+// ModifiedResidue represents a modified residue.
+type ModifiedResidue struct {
 	Position int64  `json:"position"`
 	Note     string `json:"note"`
 }
@@ -256,6 +263,16 @@ func (u *UniProt) extractPTMs() error {
 		pos, _ := strconv.ParseInt(glyco[1], 10, 64)
 		u.PTMs.Glycosilations = append(u.PTMs.Glycosilations,
 			Glycosilation{Position: pos, Note: glyco[2]})
+	}
+
+	// Modified residues
+	r, _ = regexp.Compile("(?ms)^FT[ ]*MOD_RES[ ]*([0-9]*)$.*?note=\"(.*?)\"")
+	matches = r.FindAllStringSubmatch(string(u.Raw), -1)
+
+	for _, modres := range matches {
+		pos, _ := strconv.ParseInt(modres[1], 10, 64)
+		u.PTMs.ModifiedResidues = append(u.PTMs.ModifiedResidues,
+			ModifiedResidue{Position: pos, Note: modres[2]})
 	}
 
 	// Disulfide bonds
