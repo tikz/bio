@@ -16,8 +16,7 @@ type SASA struct {
 	Apolar       float64
 	Polar        float64
 	Unknown      float64
-	Residues     []*pdb.Residue
-	ResiduesSASA []ResidueSASA
+	ResiduesSASA map[*pdb.Residue]ResidueSASA
 }
 
 // ResidueSASA represents results for a single residue, a line in the output.
@@ -45,6 +44,7 @@ func Run(p *pdb.PDB) (sasa SASA, err error) {
 		return
 	}
 
+	sasa.ResiduesSASA = make(map[*pdb.Residue]ResidueSASA)
 	for _, l := range strings.Split(string(out), "\n") {
 		if len(l) > 0 && l[0:3] == "RES" {
 			// aa := l[4:7]
@@ -60,8 +60,7 @@ func Run(p *pdb.PDB) (sasa SASA, err error) {
 				return v
 			}
 
-			sasa.Residues = append(sasa.Residues, p.Chains[chain][pos])
-			sasa.ResiduesSASA = append(sasa.ResiduesSASA, ResidueSASA{
+			sasa.ResiduesSASA[p.Chains[chain][pos]] = ResidueSASA{
 				All:       parse(13, 22),
 				RelAll:    parse(22, 29),
 				Side:      parse(29, 35),
@@ -72,7 +71,7 @@ func Run(p *pdb.PDB) (sasa SASA, err error) {
 				RelApolar: parse(61, 67),
 				Polar:     parse(67, 74),
 				RelPolar:  parse(74, 80),
-			})
+			}
 		}
 
 		if len(l) > 0 && l[0:5] == "TOTAL" {
