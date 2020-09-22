@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"respdb/clinvar"
-	"respdb/http"
 	"strconv"
 	"strings"
-)
 
-var DbSNP *clinvar.DbSNP // TODO: think about index+file search vs leaving this in RAM as is
+	"github.com/tikz/bio/http"
+)
 
 // UniProt contains relevant protein data for a single accession.
 type UniProt struct {
@@ -25,21 +23,20 @@ type UniProt struct {
 	Sites    []*Site         `json:"sites"`    // protein function sites
 	PTMs     PTMs            `json:"ptms"`     // post translational modifications
 	Pfam     []string        `json:"pfam"`     // Pfam families accessions
-	Variants []*VariantEntry `json:"variants"` // dbSNP variants
+	Variants []*VariantEntry `json:"variants"` // variants
 	Raw      []byte          `json:"-"`        // TXT API raw bytes.
 }
 
 // VariantEntry represents a single variant entry extracted from the TXT.
 type VariantEntry struct {
-	Position int64           `json:"position"`
-	FromAa   string          `json:"fromAa"`
-	ToAa     string          `json:"toAa"`
-	Change   string          `json:"change"`
-	Note     string          `json:"note"`
-	Evidence string          `json:"evidence"`
-	ID       string          `json:"id"`
-	DbSNP    string          `json:"dbsnp"`
-	ClinVar  *clinvar.Allele `json:"clinvar"`
+	Position int64  `json:"position"`
+	FromAa   string `json:"fromAa"`
+	ToAa     string `json:"toAa"`
+	Change   string `json:"change"`
+	Note     string `json:"note"`
+	Evidence string `json:"evidence"`
+	ID       string `json:"id"`
+	DbSNP    string `json:"dbsnp"`
 }
 
 // SAS represents a single aminoacid substitution.
@@ -231,7 +228,6 @@ func (u *UniProt) extractVariants() error {
 		entry.Change = entry.FromAa + variant[1] + entry.ToAa
 
 		entry.DbSNP = ne[0][3]
-		entry.ClinVar = DbSNP.GetVariation(entry.DbSNP, entry.Change)
 
 		r, _ = regexp.Compile("(?s)/evidence=\"(.*?)\"")
 		e := r.FindAllStringSubmatch(d, -1)

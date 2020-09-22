@@ -2,9 +2,10 @@ package sasa
 
 import (
 	"os/exec"
-	"respdb/pdb"
 	"strconv"
 	"strings"
+
+	"github.com/tikz/bio/pdb"
 )
 
 // BuriedResidues returns a list of buried residues (relative sidechain SASA < 50%)

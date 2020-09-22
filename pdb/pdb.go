@@ -3,8 +3,9 @@ package pdb
 import (
 	"fmt"
 	"io/ioutil"
-	"respdb/http" // TOOD: decouple this
 	"time"
+
+	"github.com/tikz/bio/http"
 )
 
 // PDB represents a single PDB entry.

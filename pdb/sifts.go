@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"respdb/http"
 	"strings"
+
+	"github.com/tikz/bio/http"
 )
 
 // Reference: https://www.ebi.ac.uk/pdbe/api/doc/sifts.html
