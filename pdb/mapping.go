@@ -32,6 +32,8 @@ func (pdb *PDB) makeMappings() {
 				seqResPos := i - m.UnpStart + m.PDBStart.ResidueNumber
 				if res, ok := pdb.SeqResChains[m.ChainID][seqResPos]; ok {
 					pdb.UniProtPositions[unpID][i] = append(pdb.UniProtPositions[unpID][i], res)
+					res.UnpPosition = i
+					res.UnpID = unpID
 				}
 			}
 		}

@@ -37,6 +37,8 @@ type Residue struct {
 	Chain           string  `json:"chain"`
 	StructPosition  int64   `json:"structPosition"`
 	Position        int64   `json:"position"`
+	UnpID           string  `json:"unp_id"`
+	UnpPosition     int64   `json:"unp_position"`
 	Name            string  `json:"-"`
 	Name1           string  `json:"name1"`
 	Name3           string  `json:"-"`
