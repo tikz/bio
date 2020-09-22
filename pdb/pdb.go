@@ -3,9 +3,14 @@ package pdb
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/tikz/bio/http"
+)
+
+const (
+	dataDir = "data/pdb/"
 )
 
 // PDB represents a single PDB entry.
@@ -43,10 +48,8 @@ type PDB struct {
 	// REMARK 800 site descriptions
 	BindingSiteDesc map[string]string `json:"bindingSiteDesc"` // binding site identifier to description
 
-	RawPDB []byte `json:"-"` // PDB file raw data
-	RawCIF []byte `json:"-"` // CIF file raw data
-
-	LocalPath string `json:"-"` // local path for the PDB file
+	PDBPath string `json:"-"` // local path for the PDB file
+	CIFPath string `json:"-"` // local path for the CIF file
 }
 
 // NewPDBFromID constructs a new instance from a UniProt accession ID and PDB ID, fetching and parsing the data.
@@ -60,9 +63,9 @@ func NewPDBFromID(pdbID string) (PDB, error) {
 // NewPDBFromRaw constructs a new instance from raw bytes, and only extracts ATOM records.
 // This is useful for parsing PDB output files generated from external tools.
 func NewPDBFromRaw(raw []byte) (*PDB, error) {
-	pdb := PDB{RawPDB: raw}
+	pdb := PDB{}
 
-	err := pdb.ExtractResidues()
+	err := pdb.ExtractResidues(raw)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %v", err)
 	}
@@ -79,7 +82,7 @@ func (pdb *PDB) Load() error {
 
 	err = pdb.Parse()
 	if err != nil {
-		return fmt.Errorf("parse: %v", err)
+		return fmt.Errorf("extract: %v", err)
 	}
 
 	return nil
@@ -87,37 +90,59 @@ func (pdb *PDB) Load() error {
 
 // Parse parses the raw PDB text.
 func (pdb *PDB) Parse() error {
-	err := pdb.Extract()
+	rawCIF, err := ioutil.ReadFile(pdb.CIFPath)
 	if err != nil {
-		return fmt.Errorf("extract: %v", err)
+		return err
+	}
+
+	rawPDB, err := ioutil.ReadFile(pdb.PDBPath)
+	if err != nil {
+		return err
+	}
+
+	err = pdb.ExtractSeqRes(rawPDB)
+	if err != nil {
+		return fmt.Errorf("extract SEQRES: %v", err)
+	}
+
+	err = pdb.ExtractResidues(rawPDB)
+	if err != nil {
+		return fmt.Errorf("extract PDB residues: %v", err)
+	}
+
+	err = pdb.ExtractCIFData(rawCIF)
+	if err != nil {
+		return fmt.Errorf("extract CIF data: %v", err)
 	}
 
 	pdb.makeMappings()
 
-	pdb.extractSites()
+	pdb.extractSites(rawPDB)
 	return nil
 }
 
 // Fetch downloads all external data for the entry.
 func (pdb *PDB) Fetch() error {
-	url := "https://www.rcsb.org/structure/" + pdb.ID
-	urlCIF := "https://files.rcsb.org/download/" + pdb.ID + ".cif"
-	rawCIF, err := http.Get(urlCIF)
-	if err != nil {
-		return fmt.Errorf("download CIF file: %v", err)
+	pdb.URL = "https://www.rcsb.org/structure/" + pdb.ID
+
+	pdb.CIFPath = dataDir + pdb.ID + ".cif"
+	_, err := os.Stat(pdb.CIFPath)
+	if os.IsNotExist(err) {
+		rawCIF, err := http.Get("https://files.rcsb.org/download/" + pdb.ID + ".cif")
+		if err != nil {
+			return fmt.Errorf("download CIF file: %v", err)
+		}
+		writeFile(pdb.CIFPath, rawCIF)
 	}
 
-	urlPDB := "https://files.rcsb.org/download/" + pdb.ID + ".pdb"
-	rawPDB, err := http.Get(urlPDB)
-	if err != nil {
-		return fmt.Errorf("download PDB file: %v", err)
+	pdb.PDBPath = dataDir + pdb.ID + ".pdb"
+	if os.IsNotExist(err) {
+		rawPDB, err := http.Get("https://files.rcsb.org/download/" + pdb.ID + ".pdb")
+		if err != nil {
+			return fmt.Errorf("download PDB file: %v", err)
+		}
+		writeFile(pdb.PDBPath, rawPDB)
 	}
-
-	pdb.URL = url
-	pdb.PDBURL = urlPDB
-	pdb.CIFURL = urlCIF
-	pdb.RawPDB = rawPDB
-	pdb.RawCIF = rawCIF
 
 	err = pdb.getSIFTSMappings()
 	if err != nil {
@@ -127,33 +152,11 @@ func (pdb *PDB) Fetch() error {
 	return nil
 }
 
-// Extract parses data from the raw PDB, raw CIF, SIFTS, and populates the entry.
-func (pdb *PDB) Extract() error {
-	err := pdb.ExtractSeqRes()
+func writeFile(path string, data []byte) error {
+	err := ioutil.WriteFile(path, data, 0644)
 	if err != nil {
-		return fmt.Errorf("extract SEQRES: %v", err)
+		return fmt.Errorf("write file: %v", err)
 	}
 
-	err = pdb.ExtractResidues()
-	if err != nil {
-		return fmt.Errorf("extract PDB residues: %v", err)
-	}
-
-	err = pdb.ExtractCIFData()
-	if err != nil {
-		return fmt.Errorf("extract CIF data: %v", err)
-	}
-
-	return nil
-}
-
-// WriteFile writes the raw PDB contents to a file.
-func (pdb *PDB) WriteFile(path string) error {
-	err := ioutil.WriteFile(path, pdb.RawPDB, 0644)
-	if err != nil {
-		return fmt.Errorf("write PDB file: %v", err)
-	}
-
-	pdb.LocalPath = path
 	return nil
 }

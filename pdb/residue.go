@@ -87,9 +87,9 @@ func NewResidue(chain string, pos int64, input string) *Residue {
 }
 
 // ExtractSeqRes parses the raw PDB for SEQRES records containing the primary sequence.
-func (pdb *PDB) ExtractSeqRes() error {
+func (pdb *PDB) ExtractSeqRes(rawPDB []byte) error {
 	regex, _ := regexp.Compile("SEQRES[ ]*.*?[ ]+(.*?)[ ]+([0-9]*)[ ]*([A-Z ]*)")
-	matches := regex.FindAllStringSubmatch(string(pdb.RawPDB), -1)
+	matches := regex.FindAllStringSubmatch(string(rawPDB), -1)
 	if len(matches) == 0 {
 		return errors.New("SEQRES not found")
 	}
@@ -110,13 +110,13 @@ func (pdb *PDB) ExtractSeqRes() error {
 }
 
 // ExtractResidues extracts data from the ATOM and HETATM records and parses them.
-func (pdb *PDB) ExtractResidues() error {
-	atoms, err := pdb.extractPDBATMRecords("ATOM")
+func (pdb *PDB) ExtractResidues(rawPDB []byte) error {
+	atoms, err := pdb.extractPDBATMRecords(rawPDB, "ATOM")
 	if err != nil {
 		return fmt.Errorf("extract ATOM records: %v", err)
 	}
 
-	hetatms, _ := pdb.extractPDBATMRecords("HETATM")
+	hetatms, _ := pdb.extractPDBATMRecords(rawPDB, "HETATM")
 
 	pdb.Atoms = atoms
 	pdb.HetAtoms = hetatms

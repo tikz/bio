@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-func (pdb *PDB) extractSites() error {
+func (pdb *PDB) extractSites(rawPDB []byte) error {
 	sites := make(map[string][]*Residue)
 	r, _ := regexp.Compile("(?m)^SITE.*$")
-	siteRecords := r.FindAllString(string(pdb.RawPDB), -1)
+	siteRecords := r.FindAllString(string(rawPDB), -1)
 
 	for _, s := range siteRecords {
 		// https://www.wwpdb.org/documentation/file-format-content/format23/sect7.html#SITE
@@ -31,14 +31,14 @@ func (pdb *PDB) extractSites() error {
 
 	pdb.BindingSite = sites
 
-	pdb.extractSitesRemarks()
+	pdb.extractSitesRemarks(rawPDB)
 
 	return nil
 }
 
-func (pdb *PDB) extractSitesRemarks() {
+func (pdb *PDB) extractSitesRemarks(rawPDB []byte) {
 	r, _ := regexp.Compile("(?m)REMARK 800 (.*?): (.*?)$")
-	remarks := r.FindAllStringSubmatch(string(pdb.RawPDB), -1)
+	remarks := r.FindAllStringSubmatch(string(rawPDB), -1)
 
 	siteDescs := make(map[string]string)
 	var identifier string

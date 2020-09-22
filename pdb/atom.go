@@ -25,11 +25,11 @@ type Atom struct {
 }
 
 // extractPDBATMRecords extracts either ATOM or HETATM records.
-func (pdb *PDB) extractPDBATMRecords(recordName string) ([]*Atom, error) {
+func (pdb *PDB) extractPDBATMRecords(rawPDB []byte, recordName string) ([]*Atom, error) {
 	var atoms []*Atom
 
 	r, _ := regexp.Compile("(?m)^" + recordName + ".*$")
-	matches := r.FindAllString(string(pdb.RawPDB), -1)
+	matches := r.FindAllString(string(rawPDB), -1)
 	if len(matches) == 0 {
 		return atoms, errors.New("atoms not found")
 	}

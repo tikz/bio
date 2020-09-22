@@ -64,7 +64,7 @@ func TestSeqRes(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = pdb.ExtractSeqRes()
+	err = pdb.ExtractSeqRes(raw)
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,9 +102,8 @@ func TestCIF(t *testing.T) {
 	}
 
 	t.Logf("Testing CIF parse")
-	pdb.RawCIF = rawCIF
 
-	err = pdb.ExtractCIFData()
+	err = pdb.ExtractCIFData(rawCIF)
 	if err != nil {
 		t.Errorf("cannot extract CIF: %s", err)
 	}
