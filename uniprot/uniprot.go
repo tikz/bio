@@ -190,10 +190,9 @@ func (u *UniProt) extractNames() error {
 	r, _ = regexp.Compile("(?m)^GN.*?=(.*?)[;| ]")
 	matches = r.FindAllStringSubmatch(string(u.Raw), -1)
 
-	if len(matches) == 0 {
-		return errors.New("gene name not found")
+	if len(matches) != 0 {
+		u.Gene = matches[0][1]
 	}
-	u.Gene = matches[0][1]
 
 	r, _ = regexp.Compile("(?m)^OS[ ]+(.*?)\\.")
 	matches = r.FindAllStringSubmatch(string(u.Raw), -1)
