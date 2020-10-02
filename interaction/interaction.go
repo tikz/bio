@@ -58,3 +58,15 @@ func NearHets(p *pdb.PDB, r *pdb.Residue, distance float64) map[string]bool {
 	}
 	return hets
 }
+
+// NearWater returns if the given residue is near a HOH het.
+func NearWater(p *pdb.PDB, r *pdb.Residue, distance float64) bool {
+	for _, atom := range r.Atoms {
+		for _, hetAtom := range p.HetAtoms {
+			if hetAtom.Residue == "HOH" && pdb.AtomsDistance(atom, hetAtom) < distance {
+				return true
+			}
+		}
+	}
+	return false
+}
