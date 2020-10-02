@@ -9,7 +9,7 @@ import (
 
 // SearchQuery fetches the search results for a given query and returns a list of UniProt IDs.
 func SearchQuery(query string) (ids []string, err error) {
-	url := "https://www.uniprot.org/uniprot/?query=annotation:(type:mod_res%20phosphotyrosine)&format=list"
+	url := "https://www.uniprot.org/uniprot/?query=" + query + "&format=list"
 	raw, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("UniProt search query %v: %v", query, err)
