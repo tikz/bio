@@ -4,6 +4,7 @@ import (
 	"github.com/tikz/bio/pdb"
 )
 
+// Chains receives a structure and a cutoff distance, and returns a map of residues to residues in other chains that are near.
 func Chains(p *pdb.PDB, distance float64) map[*pdb.Residue][]*pdb.Residue {
 	interacts := make(map[*pdb.Residue][]*pdb.Residue)
 	var i1, i2 int
@@ -26,6 +27,7 @@ func Chains(p *pdb.PDB, distance float64) map[*pdb.Residue][]*pdb.Residue {
 	return interacts
 }
 
+// Hets receives a structure and a cutoff distance, and returns a map of residues to near ligand names.
 func Hets(p *pdb.PDB, distance float64) map[*pdb.Residue][]string {
 	interacts := make(map[*pdb.Residue][]string)
 	for _, chain := range p.Chains {
@@ -41,6 +43,8 @@ func Hets(p *pdb.PDB, distance float64) map[*pdb.Residue][]string {
 	return interacts
 }
 
+// NearHets returns a map of ligand names present in the structure (HOH, SO4, etc)
+// to a bool indicating if the ligand is near the given residue.
 func NearHets(p *pdb.PDB, r *pdb.Residue, distance float64) map[string]bool {
 	hets := make(map[string]bool)
 	for _, atom := range r.Atoms {
