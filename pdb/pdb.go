@@ -90,12 +90,12 @@ func (pdb *PDB) Load() error {
 
 // Parse parses the raw PDB text.
 func (pdb *PDB) Parse() error {
-	rawCIF, err := ioutil.ReadFile(pdb.CIFPath)
+	rawCIF, err := pdb.RawCIF()
 	if err != nil {
 		return err
 	}
 
-	rawPDB, err := ioutil.ReadFile(pdb.PDBPath)
+	rawPDB, err := pdb.RawPDB()
 	if err != nil {
 		return err
 	}
@@ -119,6 +119,21 @@ func (pdb *PDB) Parse() error {
 
 	pdb.extractSites(rawPDB)
 	return nil
+}
+
+func rawFile(path string) (raw []byte, err error) {
+	raw, err = ioutil.ReadFile(path)
+	return
+}
+
+// RawCIF returns the raw CIF file contents as bytes
+func (pdb *PDB) RawCIF() ([]byte, error) {
+	return rawFile(pdb.CIFPath)
+}
+
+// RawPDB returns the raw PDB file contents as bytes
+func (pdb *PDB) RawPDB() ([]byte, error) {
+	return rawFile(pdb.PDBPath)
 }
 
 // Fetch downloads all external data for the entry.
