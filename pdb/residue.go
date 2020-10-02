@@ -45,7 +45,6 @@ type Residue struct {
 	Atoms           []*Atom `json:"-"`
 	MeanBFactor     float64 `json:"mean_bfactor"`
 	NormMeanBFactor float64 `json:"norm_mean_bfactor"`
-	DSSP            string  `json:"dssp"`
 }
 
 // IsAminoacid returns true if the given letter is an aminoacid, false otherwise.

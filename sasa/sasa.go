@@ -9,7 +9,7 @@ import (
 	"github.com/tikz/bio/pdb"
 )
 
-type SASA struct {
+type SASAResults struct {
 	Total        float64
 	Side         float64
 	Main         float64
@@ -33,8 +33,8 @@ type ResidueSASA struct {
 	RelPolar  float64
 }
 
-// Run runs FreeSASA on a PDB and parses the output.
-func Run(p *pdb.PDB) (sasa SASA, err error) {
+// SASA runs FreeSASA on a PDB and parses the output.
+func SASA(p *pdb.PDB) (sasa SASAResults, err error) {
 	cmd := exec.Command("freesasa",
 		p.PDBPath,
 		"--format=rsa")
