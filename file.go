@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/tikz/bio/pdb"
 	"github.com/tikz/bio/uniprot"
@@ -24,6 +25,8 @@ func makeDirs() {
 func LoadPDB(pdbID string) (*pdb.PDB, error) {
 	makeDirs()
 
+	pdbID = strings.ToUpper(pdbID)
+
 	path := pdbDir + pdbID + fileExt
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -43,6 +46,7 @@ func LoadPDB(pdbID string) (*pdb.PDB, error) {
 }
 
 func readPDB(pdbID string) (*pdb.PDB, error) {
+	pdbID = strings.ToUpper(pdbID)
 	path := pdbDir + pdbID + fileExt
 	p := new(pdb.PDB)
 	err := read(path, &p)
@@ -56,6 +60,7 @@ func readPDB(pdbID string) (*pdb.PDB, error) {
 
 func LoadUniProt(unpID string) (*uniprot.UniProt, error) {
 	makeDirs()
+	unpID = strings.ToUpper(unpID)
 
 	path := unpDir + unpID + fileExt
 	_, err := os.Stat(path)
