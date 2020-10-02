@@ -9,14 +9,15 @@ import (
 	"github.com/tikz/bio/pdb"
 )
 
-type SASAResults struct {
-	Total        float64
-	Side         float64
-	Main         float64
-	Apolar       float64
-	Polar        float64
-	Unknown      float64
-	ResiduesSASA map[*pdb.Residue]ResidueSASA
+// Results represents the output of a FreeSASA run.
+type Results struct {
+	Total    float64
+	Side     float64
+	Main     float64
+	Apolar   float64
+	Polar    float64
+	Unknown  float64
+	Residues map[*pdb.Residue]ResidueSASA
 }
 
 // ResidueSASA represents results for a single residue, a line in the output.
@@ -34,7 +35,7 @@ type ResidueSASA struct {
 }
 
 // SASA runs FreeSASA on a PDB and parses the output.
-func SASA(p *pdb.PDB) (sasa SASAResults, err error) {
+func SASA(p *pdb.PDB) (sasa Results, err error) {
 	cmd := exec.Command("freesasa",
 		p.PDBPath,
 		"--format=rsa")
@@ -44,7 +45,7 @@ func SASA(p *pdb.PDB) (sasa SASAResults, err error) {
 		return
 	}
 
-	sasa.ResiduesSASA = make(map[*pdb.Residue]ResidueSASA)
+	sasa.Residues = make(map[*pdb.Residue]ResidueSASA)
 	for _, l := range strings.Split(string(out), "\n") {
 		if len(l) > 0 && l[0:3] == "RES" {
 			// aa := l[4:7]
@@ -60,7 +61,7 @@ func SASA(p *pdb.PDB) (sasa SASAResults, err error) {
 				return v
 			}
 
-			sasa.ResiduesSASA[p.Chains[chain][pos]] = ResidueSASA{
+			sasa.Residues[p.Chains[chain][pos]] = ResidueSASA{
 				All:       parse(13, 22),
 				RelAll:    parse(22, 29),
 				Side:      parse(29, 35),
