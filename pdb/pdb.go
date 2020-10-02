@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/tikz/bio/http"
@@ -174,4 +176,14 @@ func writeFile(path string, data []byte) error {
 	}
 
 	return nil
+}
+
+func (pdb *PDB) CopyPDB(path string) (string, error) {
+	_, filename := filepath.Split(pdb.PDBPath)
+	dstPath := filepath.Clean(path) + "/" + filename
+	_, err := exec.Command("cp", pdb.PDBPath, dstPath).Output()
+	if err != nil {
+		return dstPath, err
+	}
+	return dstPath, nil
 }

@@ -27,42 +27,41 @@ type Pocket struct {
 }
 
 // Run runs Fpocket on a PDB and parses the results
-func Run(outPath string, p *pdb.PDB) (results Results, err error) {
-	_, pdbFile := filepath.Split(p.PDBPath)
+func Run(outPath string, p *pdb.PDB) (Results, error) {
 	outPath = filepath.Clean(outPath)
 	outJobPath := outPath + "/" + p.ID + "_out"
 
-	_, err = os.Stat(outJobPath)
+	var results Results
+
+	_, err := os.Stat(outJobPath)
 	if os.IsNotExist(err) {
 		// Copy PDB to output base dir since fpocket always
 		// creates the results dir in the same level as the PDB.
-		tempPDBPath := outPath + "/" + pdbFile
-		_, err = exec.Command("cp", p.PDBPath, tempPDBPath).Output()
+		tmpPDB, err := p.CopyPDB(outPath)
 		if err != nil {
-			return
+			return results, err
 		}
 
 		// Run Fpocket
-		cmd := exec.Command("fpocket", "-f", tempPDBPath)
+		cmd := exec.Command("fpocket", "-f", tmpPDB)
 
 		out, err := cmd.CombinedOutput()
 		if err != nil || strings.Contains(string(out), "failed") {
 			return results, fmt.Errorf("fpocket: %v %s", err, string(out))
 		}
 
-		os.Remove(tempPDBPath)
+		os.Remove(tmpPDB)
 	}
 
 	// Walk created folder containing pocket analysis files
 	pockets, err := walkPocketDir(p, outJobPath+"/pockets")
 	if err != nil {
-		return
+		return results, nil
 	}
 
-	return Results{
-		Pockets: pockets,
-		Dir:     outJobPath,
-	}, nil
+	results.Pockets = pockets
+	results.Dir = outJobPath
+	return results, nil
 }
 
 // ResidueInPocket returns if the given residue is in a pocket, and the pocket's drug score.
