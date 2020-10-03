@@ -23,20 +23,31 @@ type FoldX struct {
 	absMutationsDir string
 }
 
+// NewFoldX instantiates the required paths for FoldX.
 func NewFoldX(foldxBinPath string, repairDirPath string, mutationsDirPath string) (foldx FoldX, err error) {
 	foldx.binDir, foldx.binFile = filepath.Split(foldxBinPath)
 	foldx.repairDir = filepath.Clean(repairDirPath)
-	foldx.absRepairDir, err = filepath.Abs(repairDirPath)
-	if err != nil {
+	if foldx.absRepairDir, err = filepath.Abs(repairDirPath); err != nil {
 		return
 	}
 
 	foldx.mutationsDir = filepath.Clean(mutationsDirPath)
-	foldx.absMutationsDir, err = filepath.Abs(mutationsDirPath)
-	if err != nil {
+	if foldx.absMutationsDir, err = filepath.Abs(mutationsDirPath); err != nil {
 		return
 	}
 
+	err = func() error {
+		if _, err := os.Stat(foldxBinPath); os.IsNotExist(err) {
+			return err
+		}
+		if _, err := os.Stat(foldx.absRepairDir); os.IsNotExist(err) {
+			return err
+		}
+		if _, err := os.Stat(foldx.absMutationsDir); os.IsNotExist(err) {
+			return err
+		}
+		return nil
+	}()
 	return
 }
 
@@ -65,6 +76,7 @@ func (foldx *FoldX) Repair(p *pdb.PDB) (outFile string, err error) {
 		}
 
 		if !strings.Contains(string(out), "run OK") || fileNotExist(outFile) {
+			fmt.Println(string(out))
 			return outFile, errors.New("RepairPDB failed")
 		}
 	}
