@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	summaryURL  = "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz"
-	summaryPath = "data/clinvar/variant_summary.txt"
+	summaryURL = "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz"
 )
 
 type ClinVar struct {
@@ -53,6 +52,7 @@ func NewClinVar(clinvarDir string) (*ClinVar, error) {
 	}
 
 	cv := &ClinVar{}
+	cv.summaryPath = summaryPath
 	cv.snps = make(map[string][]Allele)
 	err = cv.load()
 
@@ -60,7 +60,7 @@ func NewClinVar(clinvarDir string) (*ClinVar, error) {
 }
 
 func (cv *ClinVar) load() error {
-	f, err := os.Open(summaryPath)
+	f, err := os.Open(cv.summaryPath)
 	if err != nil {
 		return err
 	}
