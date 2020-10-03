@@ -8,12 +8,12 @@ import (
 	"github.com/tikz/bio/pdb"
 )
 
-type DSSPResults struct {
+type Results struct {
 	Residues map[*pdb.Residue]string
 }
 
 // DSSP calculates secondary structure for a given PDB.
-func DSSP(p *pdb.PDB) (results DSSPResults, err error) {
+func DSSP(p *pdb.PDB) (results Results, err error) {
 	cmd := exec.Command("mkdssp", "-i", p.PDBPath)
 
 	out, err := cmd.CombinedOutput()
