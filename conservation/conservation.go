@@ -51,6 +51,7 @@ type Mapping struct {
 	Bitscore      float64
 }
 
+// Pfam represents a storage of HMM models.
 type Pfam struct {
 	modelsDir string
 }
