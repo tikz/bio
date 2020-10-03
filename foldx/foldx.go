@@ -150,7 +150,7 @@ func (foldx *FoldX) BuildModel(repairedPath string, formattedMutant string) (flo
 		}
 	}
 
-	return ddG, nil
+	return extractddG(diffPath)
 }
 
 func extractddG(path string) (ddG float64, err error) {
