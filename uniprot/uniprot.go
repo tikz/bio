@@ -12,20 +12,29 @@ import (
 
 // UniProt contains relevant protein data for a single accession.
 type UniProt struct {
-	ID             string          `json:"id"`             // accession ID
-	URL            string          `json:"url"`            // page URL for the entry
-	TXTURL         string          `json:"txtUrl"`         // TXT API URL for the entry.
-	Name           string          `json:"name"`           // protein name
-	Gene           string          `json:"gene"`           // gene code
-	Organism       string          `json:"organism"`       // organism
-	Sequence       string          `json:"sequence"`       // canonical sequence
-	PDBIDs         []string        `json:"pdbIds"`         // PDB IDs
-	PDBIDsCoverage []float64       `json:"pdbIdsCoverage"` // PDB IDs coverage
-	Sites          []*Site         `json:"sites"`          // protein function sites
-	PTMs           PTMs            `json:"ptms"`           // post translational modifications
-	Pfam           []string        `json:"pfam"`           // Pfam families accessions
-	Variants       []*VariantEntry `json:"variants"`       // variants
-	Raw            []byte          `json:"-"`              // TXT API raw bytes.
+	ID       string          `json:"id"`       // accession ID
+	URL      string          `json:"url"`      // page URL for the entry
+	TXTURL   string          `json:"txtUrl"`   // TXT API URL for the entry.
+	Name     string          `json:"name"`     // protein name
+	Gene     string          `json:"gene"`     // gene code
+	Organism string          `json:"organism"` // organism
+	Sequence string          `json:"sequence"` // canonical sequence
+	PDBs     []PDB           `json:"pdbs"`     // PDBs
+	Sites    []*Site         `json:"sites"`    // protein function sites
+	PTMs     PTMs            `json:"ptms"`     // post translational modifications
+	Pfam     []string        `json:"pfam"`     // Pfam families accessions
+	Variants []*VariantEntry `json:"variants"` // variants
+	Raw      []byte          `json:"-"`        // TXT API raw bytes.
+}
+
+// PDB represents a single available PDB structure for an UniProt.
+type PDB struct {
+	ID         string  `json:"id"`
+	Start      int     `json:"start"`
+	End        int     `json:"end"`
+	Coverage   float64 `json:"coverage"`
+	Method     string  `json:"method"`
+	Resolution float64 `json:"resolution"`
 }
 
 // VariantEntry represents a single variant entry extracted from the TXT.
@@ -142,18 +151,29 @@ func (u *UniProt) extract() error {
 
 // extractPDBs parses the TXT for PDB IDs and populates UniProt.PDBs
 func (u *UniProt) extractPDBs() error {
-	// Regex match all PDB IDs in the UniProt TXT entry. X-ray only, ignore others (NMR, etc).
-	// https://regex101.com/r/BpJ3QB/1
-	r, _ := regexp.Compile("PDB;[ ]*(.*?);[ ]*(X.*?ray);[ ]*([0-9\\.]*).*?;.*?=([0-9]*)-([0-9]*)")
+	r, _ := regexp.Compile("PDB; (.*?); (.*?); (.*?);.*?$")
+
+	rStartEnd, _ := regexp.Compile("([0-9]*)-([0-9]*)")
 	matches := r.FindAllStringSubmatch(string(u.Raw), -1)
 
 	// Parse each PDB match in TXT
 	for _, m := range matches {
-		u.PDBIDs = append(u.PDBIDs, m[1])
-		startPos, _ := strconv.ParseFloat(m[4], 64)
-		endPos, _ := strconv.ParseFloat(m[5], 64)
-		coverage := (endPos - startPos) / float64(len(u.Sequence))
-		u.PDBIDsCoverage = append(u.PDBIDsCoverage, coverage)
+		coverage := 0.0
+		rangeMatches := rStartEnd.FindAllStringSubmatch(m[0], -1)
+		for _, rm := range rangeMatches {
+			startPos, _ := strconv.Atoi(rm[1])
+			endPos, _ := strconv.Atoi(rm[2])
+			coverage += float64(endPos - startPos)
+		}
+
+		coverage = coverage / float64(len(u.Sequence))
+		resolution, _ := strconv.ParseFloat(m[3], 64)
+		u.PDBs = append(u.PDBs, PDB{
+			ID:         m[1],
+			Coverage:   coverage,
+			Method:     m[2],
+			Resolution: resolution,
+		})
 	}
 
 	return nil
@@ -329,15 +349,4 @@ func (u *UniProt) extractFams() error {
 	}
 
 	return nil
-}
-
-// PDBIDExists returns true if the given PDB ID is included in this
-// UniProt entry, false otherwise.
-func (u *UniProt) PDBIDExists(pdbID string) bool {
-	for _, id := range u.PDBIDs {
-		if id == pdbID {
-			return true
-		}
-	}
-	return false
 }
