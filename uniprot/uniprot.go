@@ -246,7 +246,7 @@ func (u *UniProt) extractVariants() error {
 		n := r.FindAllStringSubmatch(d, -1)
 		entry.Note = n[0][1]
 
-		r, _ = regexp.Compile("(.) -> (.)")
+		r, _ = regexp.Compile("(.) -> (.) ")
 		ne := r.FindAllStringSubmatch(entry.Note, -1)
 		if len(ne) == 0 {
 			continue
