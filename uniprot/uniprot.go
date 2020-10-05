@@ -30,8 +30,6 @@ type UniProt struct {
 // PDB represents a single available PDB structure for an UniProt.
 type PDB struct {
 	ID         string  `json:"id"`
-	Start      int     `json:"start"`
-	End        int     `json:"end"`
 	Coverage   float64 `json:"coverage"`
 	Method     string  `json:"method"`
 	Resolution float64 `json:"resolution"`
@@ -151,11 +149,10 @@ func (u *UniProt) extract() error {
 
 // extractPDBs parses the TXT for PDB IDs and populates UniProt.PDBs
 func (u *UniProt) extractPDBs() error {
-	r, _ := regexp.Compile("PDB; (.*?); (.*?); (.*?);.*?$")
-
+	r, _ := regexp.Compile(`(?ms)PDB; (.*?); (.*?); ([\.0-9]*).*?;.*?$`)
 	rStartEnd, _ := regexp.Compile("([0-9]*)-([0-9]*)")
-	matches := r.FindAllStringSubmatch(string(u.Raw), -1)
 
+	matches := r.FindAllStringSubmatch(string(u.Raw), -1)
 	// Parse each PDB match in TXT
 	for _, m := range matches {
 		coverage := 0.0
@@ -249,7 +246,7 @@ func (u *UniProt) extractVariants() error {
 		n := r.FindAllStringSubmatch(d, -1)
 		entry.Note = n[0][1]
 
-		r, _ = regexp.Compile("(.) -> (.).*dbSNP:(rs[0-9]*)")
+		r, _ = regexp.Compile("(.) -> (.)")
 		ne := r.FindAllStringSubmatch(entry.Note, -1)
 		if len(ne) == 0 {
 			continue
@@ -258,7 +255,11 @@ func (u *UniProt) extractVariants() error {
 		entry.ToAa = ne[0][2]
 		entry.Change = entry.FromAa + variant[1] + entry.ToAa
 
-		entry.DbSNP = ne[0][3]
+		r, _ = regexp.Compile("dbSNP:(rs[0-9]*)")
+		nedb := r.FindAllStringSubmatch(entry.Note, -1)
+		if len(nedb) > 0 {
+			entry.DbSNP = nedb[0][1]
+		}
 
 		r, _ = regexp.Compile("(?s)/evidence=\"(.*?)\"")
 		e := r.FindAllStringSubmatch(d, -1)

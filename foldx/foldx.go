@@ -24,7 +24,8 @@ type FoldX struct {
 }
 
 // NewFoldX instantiates the required paths for FoldX.
-func NewFoldX(foldxBinPath string, repairDirPath string, mutationsDirPath string) (foldx FoldX, err error) {
+func NewFoldX(foldxBinPath string, repairDirPath string, mutationsDirPath string) (foldx *FoldX, err error) {
+	foldx = &FoldX{}
 	foldx.binDir, foldx.binFile = filepath.Split(foldxBinPath)
 	foldx.repairDir = filepath.Clean(repairDirPath)
 	if foldx.absRepairDir, err = filepath.Abs(repairDirPath); err != nil {

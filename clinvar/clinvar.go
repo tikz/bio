@@ -26,13 +26,13 @@ type ClinVar struct {
 
 // Allele represents a variation from ClinVar
 type Allele struct {
-	VariationID   string
-	Name          string
-	ClinSig       string
-	ClinSigSimple int
-	ProteinChange string
-	ReviewStatus  string
-	Phenotypes    string
+	VariationID   string `json:"variationId"`
+	Name          string `json:"name"`
+	ClinSig       string `json:"clinSig"`
+	ClinSigSimple int    `json:"clinSigSimple"`
+	ProteinChange string `json:"proteinChange"`
+	ReviewStatus  string `json:"reviewStatus"`
+	Phenotypes    string `json:"phenotypes"`
 }
 
 func NewClinVar(clinvarDir string) (*ClinVar, error) {

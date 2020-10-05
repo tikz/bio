@@ -37,14 +37,14 @@ type Residue struct {
 	Chain           string  `json:"chain"`
 	StructPosition  int64   `json:"structPosition"`
 	Position        int64   `json:"position"`
-	UnpID           string  `json:"unp_id"`
-	UnpPosition     int64   `json:"unp_position"`
+	UnpID           string  `json:"unpId"`
+	UnpPosition     int64   `json:"unpPosition"`
 	Name            string  `json:"-"`
 	Name1           string  `json:"name1"`
 	Name3           string  `json:"-"`
 	Atoms           []*Atom `json:"-"`
-	MeanBFactor     float64 `json:"mean_bfactor"`
-	NormMeanBFactor float64 `json:"norm_mean_bfactor"`
+	MeanBFactor     float64 `json:"-"`
+	NormMeanBFactor float64 `json:"-"`
 }
 
 // IsAminoacid returns true if the given letter is an aminoacid, false otherwise.

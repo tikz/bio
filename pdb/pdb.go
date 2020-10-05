@@ -38,10 +38,10 @@ type PDB struct {
 	ChainStartResNumber map[string]int64 `json:"chainStartResNumber"` // Chain ID to First residue number as informed in ATOM column.
 	ChainEndResNumber   map[string]int64 `json:"chainEndResNumber"`   // Chain ID to Last residue number as informed in ATOM column.
 
-	SeqRes           map[string][]*Residue           `json:"-"`      // PDB SEQRES chain ID to residue pointers
-	SeqResChains     map[string]map[int64]*Residue   `json:"-"`      // PDB SEQRES chain ID and PDB ATOM position to residue in structure
-	Chains           map[string]map[int64]*Residue   `json:"chains"` // PDB ATOM chain ID and position to pointer in structure
-	UniProtPositions map[string]map[int64][]*Residue `json:"-"`      // UniProt ID to sequence position to residue(s) (multiple chains) in structure
+	SeqRes           map[string][]*Residue           `json:"-"` // PDB SEQRES chain ID to residue pointers
+	SeqResChains     map[string]map[int64]*Residue   `json:"-"` // PDB SEQRES chain ID and PDB ATOM position to residue in structure
+	Chains           map[string]map[int64]*Residue   `json:"-"` // PDB ATOM chain ID and position to pointer in structure
+	UniProtPositions map[string]map[int64][]*Residue `json:"-"` // UniProt ID to sequence position to residue(s) (multiple chains) in structure
 
 	// Extra data
 	// SITE records
