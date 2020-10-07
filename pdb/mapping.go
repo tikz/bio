@@ -28,7 +28,7 @@ func (pdb *PDB) makeMappings() {
 		pdb.UniProtPositions[unpID] = make(map[int64][]*Residue)
 		for _, m := range unp.Mappings {
 			var i int64
-			for i = 1; i <= m.UnpEnd; i++ {
+			for i = m.UnpStart; i <= m.UnpEnd; i++ {
 				seqResPos := i - m.UnpStart + m.PDBStart.ResidueNumber
 				if res, ok := pdb.SeqResChains[m.ChainID][seqResPos]; ok {
 					pdb.UniProtPositions[unpID][i] = append(pdb.UniProtPositions[unpID][i], res)
