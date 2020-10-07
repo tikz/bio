@@ -102,35 +102,33 @@ func (ab *AbSwitch) parse(path string) ([]*ResidueResults, error) {
 func (ab *AbSwitch) Run(seq string) ([]*ResidueResults, error) {
 	name := generateID(seq)
 	outFile := ab.resultsPath + "/" + name + ".s5"
-	_, err := os.Stat(outFile)
-	if !os.IsNotExist(err) {
-		return ab.parse(outFile)
-	}
-	// Calculate
 
-	dirName := filepath.Dir(ab.binPath)
+	if _, err := os.Stat(outFile); os.IsNotExist(err) {
+		// Calculate
+		dirName := filepath.Dir(ab.binPath)
 
-	// Write fasta
-	fastaFile := "abswitch_" + name + ".fasta"
-	ioutil.WriteFile(dirName+"/"+fastaFile, []byte(">"+name+"\n"+seq), 0644)
+		// Write fasta
+		fastaFile := "abswitch_" + name + ".fasta"
+		ioutil.WriteFile(dirName+"/"+fastaFile, []byte(">"+name+"\n"+seq), 0644)
 
-	// Write cfg
-	cfgFile := "abswitch_" + name + ".cfg"
-	cfg := fmt.Sprintf("command=Switch5\nfasta=%s\noFile=%s", fastaFile, outFile)
-	ioutil.WriteFile(dirName+"/"+cfgFile, []byte(cfg), 0644)
+		// Write cfg
+		cfgFile := "abswitch_" + name + ".cfg"
+		cfg := fmt.Sprintf("command=Switch5\nfasta=%s\noFile=%s", fastaFile, outFile)
+		ioutil.WriteFile(dirName+"/"+cfgFile, []byte(cfg), 0644)
 
-	defer func() {
-		os.RemoveAll("bin/" + fastaFile)
-		os.RemoveAll("bin/" + cfgFile)
-	}()
+		defer func() {
+			os.RemoveAll("bin/" + fastaFile)
+			os.RemoveAll("bin/" + cfgFile)
+		}()
 
-	// Run
-	cmd := exec.Command(ab.binPath, "-f", cfgFile)
-	cmd.Dir = filepath.Dir(ab.binPath)
-	out, err := cmd.CombinedOutput()
-	strOut := string(out)
-	if err != nil || !strings.Contains(strings.ToLower(strOut), "printed results") {
-		return nil, errors.New(strOut)
+		// Run
+		cmd := exec.Command(ab.binPath, "-f", cfgFile)
+		cmd.Dir = filepath.Dir(ab.binPath)
+		out, err := cmd.CombinedOutput()
+		strOut := string(out)
+		if err != nil || !strings.Contains(strings.ToLower(strOut), "printed results") {
+			return nil, errors.New(strOut)
+		}
 	}
 
 	return ab.parse(outFile)
