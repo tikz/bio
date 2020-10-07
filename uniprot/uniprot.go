@@ -165,12 +165,14 @@ func (u *UniProt) extractPDBs() error {
 
 		coverage = coverage / float64(len(u.Sequence))
 		resolution, _ := strconv.ParseFloat(m[3], 64)
-		u.PDBs = append(u.PDBs, PDB{
-			ID:         m[1],
-			Coverage:   coverage,
-			Method:     m[2],
-			Resolution: resolution,
-		})
+		if m[2] == "X-ray" {
+			u.PDBs = append(u.PDBs, PDB{
+				ID:         m[1],
+				Coverage:   coverage,
+				Method:     m[2],
+				Resolution: resolution,
+			})
+		}
 	}
 
 	return nil
