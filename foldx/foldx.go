@@ -2,7 +2,6 @@ package foldx
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -82,7 +81,6 @@ func (foldx *FoldX) Repair(p *pdb.PDB) (outFile string, err error) {
 		}
 
 		if !strings.Contains(string(out), "run OK") || fileNotExist(outFile) {
-			fmt.Println(string(out))
 			return outFile, errors.New(string(out))
 		}
 	}
@@ -139,12 +137,10 @@ func (foldx *FoldX) BuildModel(repairedPath string, formattedMutant string) (flo
 
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			fmt.Println(formattedMutant)
 			return ddG, errors.New(string(out))
 		}
 
 		if !strings.Contains(string(out), "run OK") {
-			fmt.Println(string(out))
 			return ddG, errors.New(string(out))
 		}
 	}
