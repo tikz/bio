@@ -17,6 +17,7 @@ import (
 type FoldX struct {
 	binFile         string
 	binDir          string
+	absBinFile      string
 	repairDir       string
 	absRepairDir    string
 	mutationsDir    string
@@ -29,6 +30,10 @@ func NewFoldX(foldxBinPath string, repairDirPath string, mutationsDirPath string
 	foldx.binDir, foldx.binFile = filepath.Split(foldxBinPath)
 	foldx.repairDir = filepath.Clean(repairDirPath)
 	if foldx.absRepairDir, err = filepath.Abs(repairDirPath); err != nil {
+		return
+	}
+
+	if foldx.absBinFile, err = filepath.Abs(foldxBinPath); err != nil {
 		return
 	}
 
@@ -73,12 +78,12 @@ func (foldx *FoldX) Repair(p *pdb.PDB) (outFile string, err error) {
 
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return outFile, err
+			return outFile, errors.New(string(out))
 		}
 
 		if !strings.Contains(string(out), "run OK") || fileNotExist(outFile) {
 			fmt.Println(string(out))
-			return outFile, errors.New("RepairPDB failed")
+			return outFile, errors.New(string(out))
 		}
 	}
 
@@ -100,7 +105,7 @@ func (foldx *FoldX) BuildModelUniProt(repairedPath string, p *pdb.PDB, unpID str
 }
 
 func (foldx *FoldX) BuildModel(repairedPath string, formattedMutant string) (float64, error) {
-	_, repairedName := filepath.Split(repairedPath)
+	repairedDir, repairedName := filepath.Split(repairedPath)
 	name := strings.Split(repairedName, "_")[0]
 
 	destDirPath := foldx.absMutationsDir + "/" + name + "/" + formattedMutant
@@ -114,40 +119,33 @@ func (foldx *FoldX) BuildModel(repairedPath string, formattedMutant string) (flo
 
 		// Create file containing individual list of mutations
 		mutantFile := "individual_list_" + name + formattedMutant
-		mutantPath := foldx.binDir + mutantFile
+		mutantPath := os.TempDir() + "/" + mutantFile
 		writeFile(mutantPath, formattedMutant+";")
-
-		// Copy PDB (FoldX can only open PDBs in the same dir)
-		tmpPDBPath := foldx.binDir + "/" + repairedName
-		_, err := exec.Command("cp", repairedPath, tmpPDBPath).Output()
-		if err != nil {
-			return ddG, err
-		}
 
 		// Remove files on scope exit
 		defer func() {
-			os.RemoveAll(tmpPDBPath)
 			os.RemoveAll(mutantPath)
 
 			// Duplicate of the original repaired PDB copied to mutation folder by FoldX
 			os.RemoveAll(destDirPath + "/WT_" + name + "_Repair_1.pdb")
 		}()
 
-		cmd := exec.Command("./foldx",
+		cmd := exec.Command(foldx.absBinFile,
 			"--command=BuildModel",
-			"--pdb="+name+"_Repair.pdb",
-			"--mutant-file="+mutantFile,
+			"--pdb="+repairedName,
+			"--mutant-file="+mutantPath,
 			"--output-dir="+destDirPath)
-		cmd.Dir = foldx.binDir
+		cmd.Dir = repairedDir
 
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return ddG, err
+			fmt.Println(formattedMutant)
+			return ddG, errors.New(string(out))
 		}
 
 		if !strings.Contains(string(out), "run OK") {
 			fmt.Println(string(out))
-			return ddG, errors.New("BuildModel failed")
+			return ddG, errors.New(string(out))
 		}
 	}
 
