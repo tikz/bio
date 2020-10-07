@@ -50,11 +50,11 @@ func NewAbSwitch(binPath string, resultsPath string) (ab *AbSwitch, err error) {
 	return ab, nil
 }
 
-func (ab *AbSwitch) Switchability(unp *uniprot.UniProt, p *pdb.PDB) (results map[int64]*ResidueResults, err error) {
+func (ab *AbSwitch) Switchability(u *uniprot.UniProt, p *pdb.PDB) (results map[int64]*ResidueResults, err error) {
 	results = make(map[int64]*ResidueResults)
 
-	for _, chain := range p.SIFTS.UniProt[unp.ID].Mappings {
-		seq := unp.Sequence[chain.UnpStart:chain.UnpEnd]
+	for _, chain := range p.SIFTS.UniProt[u.ID].Mappings {
+		seq := u.Sequence[chain.UnpStart:chain.UnpEnd]
 		residues, err := ab.Run(seq)
 		if err != nil {
 			return nil, err
