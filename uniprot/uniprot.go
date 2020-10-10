@@ -327,16 +327,14 @@ func (u *UniProt) extractPublications() error {
 		var doi string
 
 		pubmedMatches := rPubmed.FindAllStringSubmatch(pub[0], -1)
-		if len(pubmedMatches) == 0 {
-			continue
+		if len(pubmedMatches) > 0 {
+			pubmed = pubmedMatches[0][1]
 		}
-		pubmed = pubmedMatches[0][1]
 
 		doiMatches := rDOI.FindAllStringSubmatch(pub[0], -1)
-		if len(doiMatches) == 0 {
-			continue
+		if len(doiMatches) > 0 {
+			doi = doiMatches[0][1]
 		}
-		doi = doiMatches[0][1]
 
 		titleMatches := rTitle.FindAllStringSubmatch(pub[0], -1)
 		for _, titleLine := range titleMatches {
