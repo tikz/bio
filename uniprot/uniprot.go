@@ -12,19 +12,20 @@ import (
 
 // UniProt contains relevant protein data for a single accession.
 type UniProt struct {
-	ID       string          `json:"id"`       // accession ID
-	URL      string          `json:"url"`      // page URL for the entry
-	TXTURL   string          `json:"txtUrl"`   // TXT API URL for the entry.
-	Name     string          `json:"name"`     // protein name
-	Gene     string          `json:"gene"`     // gene code
-	Organism string          `json:"organism"` // organism
-	Sequence string          `json:"sequence"` // canonical sequence
-	PDBs     []PDB           `json:"pdbs"`     // PDBs
-	Sites    []*Site         `json:"sites"`    // protein function sites
-	PTMs     PTMs            `json:"ptms"`     // post translational modifications
-	Pfam     []string        `json:"pfam"`     // Pfam families accessions
-	Variants []*VariantEntry `json:"variants"` // variants
-	Raw      []byte          `json:"-"`        // TXT API raw bytes.
+	ID           string                 `json:"id"`           // accession ID
+	URL          string                 `json:"url"`          // page URL for the entry
+	TXTURL       string                 `json:"txtUrl"`       // TXT API URL for the entry.
+	Name         string                 `json:"name"`         // protein name
+	Gene         string                 `json:"gene"`         // gene code
+	Organism     string                 `json:"organism"`     // organism
+	Sequence     string                 `json:"sequence"`     // canonical sequence
+	PDBs         []PDB                  `json:"pdbs"`         // PDBs
+	Sites        []Site                 `json:"sites"`        // protein function sites
+	PTMs         PTMs                   `json:"ptms"`         // post translational modifications
+	Pfam         []string               `json:"pfam"`         // Pfam families accessions
+	Variants     []VariantEntry         `json:"variants"`     // variants
+	Publications map[string]Publication `json:"publications"` // PubMed ID to publications
+	Raw          []byte                 `json:"-"`            // TXT API raw bytes.
 }
 
 // PDB represents a single available PDB structure for an UniProt.
@@ -37,14 +38,24 @@ type PDB struct {
 
 // VariantEntry represents a single variant entry extracted from the TXT.
 type VariantEntry struct {
-	Position int64  `json:"position"`
-	FromAa   string `json:"fromAa"`
-	ToAa     string `json:"toAa"`
-	Change   string `json:"change"`
-	Note     string `json:"note"`
-	Evidence string `json:"evidence"`
-	ID       string `json:"id"`
-	DbSNP    string `json:"dbsnp"`
+	Position  int64    `json:"position"`
+	FromAa    string   `json:"fromAa"`
+	ToAa      string   `json:"toAa"`
+	Change    string   `json:"change"`
+	Note      string   `json:"note"`
+	Evidence  string   `json:"evidence"`
+	PubMedIDs []string `json:"pubmedIds"`
+	ID        string   `json:"id"`
+	DbSNP     string   `json:"dbsnp"`
+}
+
+// Publication represents a single publication entry extracted from the TXT.
+type Publication struct {
+	Title   string `json:"title"`
+	Authors string `json:"authors"`
+	Journal string `json:"journal"`
+	PubMed  string `json:"pubmed"`
+	DOI     string `json:"doi"`
 }
 
 // SAS represents a single aminoacid substitution.
@@ -130,6 +141,11 @@ func (u *UniProt) extract() error {
 	err = u.extractVariants()
 	if err != nil {
 		return fmt.Errorf("extracting variants from UniProt TXT: %v", err)
+	}
+
+	err = u.extractPublications()
+	if err != nil {
+		return fmt.Errorf("extracting publications from UniProt TXT: %v", err)
 	}
 
 	err = u.extractPTMs()
@@ -226,10 +242,11 @@ func (u *UniProt) extractNames() error {
 
 // extractVariants parses for variant references
 func (u *UniProt) extractVariants() error {
-	var variants []*VariantEntry
+	var variants []VariantEntry
 
 	// https://regex101.com/r/BpJ3QB/1
 	r, _ := regexp.Compile("(?ms)^FT[ ]*VARIANT[ ]*([0-9]*)$(.*?)id=\"(.*?)\"")
+	rPubmed, _ := regexp.Compile("PubMed:([0-9]*)")
 	matches := r.FindAllStringSubmatch(string(u.Raw), -1)
 
 	for _, variant := range matches {
@@ -267,13 +284,85 @@ func (u *UniProt) extractVariants() error {
 		e := r.FindAllStringSubmatch(d, -1)
 		if len(e) > 0 {
 			entry.Evidence = e[0][1]
+			pubmedMatches := rPubmed.FindAllStringSubmatch(entry.Evidence, -1)
+
+			for _, match := range pubmedMatches {
+				entry.PubMedIDs = append(entry.PubMedIDs, match[1])
+			}
 		}
 
 		entry.ID = variant[3]
-		variants = append(variants, &entry)
+		variants = append(variants, entry)
 	}
 
 	u.Variants = variants
+
+	return nil
+}
+
+func (u *UniProt) extractPublications() error {
+	u.Publications = make(map[string]Publication)
+
+	// https://regex101.com/r/G2FV96/1/
+	rPub, _ := regexp.Compile("(?ms)^RN.*?RL.*?$")
+	rTitle, _ := regexp.Compile("(?m)^RT[ ]*(.*)")
+	rAuthors, _ := regexp.Compile("(?m)^RA[ ]*(.*)")
+	rJournal, _ := regexp.Compile("RL[ ]*(.*)")
+	rPubmed, _ := regexp.Compile("PubMed=([0-9]*)")
+	rDOI, _ := regexp.Compile("DOI=(.*?);")
+
+	clean := func(s string) string {
+		s = strings.ReplaceAll(s, ";", "")
+		s = strings.ReplaceAll(s, "\"", "")
+		s = strings.TrimSpace(s)
+		return s
+	}
+
+	pubMatches := rPub.FindAllStringSubmatch(string(u.Raw), -1)
+	for _, pub := range pubMatches {
+		var title string
+		var authors string
+		var journal string
+		var pubmed string
+		var doi string
+
+		pubmedMatches := rPubmed.FindAllStringSubmatch(pub[0], -1)
+		if len(pubmedMatches) == 0 {
+			continue
+		}
+		pubmed = pubmedMatches[0][1]
+
+		doiMatches := rDOI.FindAllStringSubmatch(pub[0], -1)
+		if len(doiMatches) == 0 {
+			continue
+		}
+		doi = doiMatches[0][1]
+
+		titleMatches := rTitle.FindAllStringSubmatch(pub[0], -1)
+		for _, titleLine := range titleMatches {
+			title += titleLine[1] + " "
+		}
+		title = clean(title)
+
+		authorMatches := rAuthors.FindAllStringSubmatch(pub[0], -1)
+		for _, authorLine := range authorMatches {
+			authors += authorLine[1] + " "
+		}
+		authors = clean(authors)
+
+		journalMatches := rJournal.FindAllStringSubmatch(pub[0], -1)
+		if len(journalMatches) > 0 {
+			journal = journalMatches[0][1]
+		}
+
+		u.Publications[pubmed] = Publication{
+			Title:   title,
+			Authors: authors,
+			Journal: journal,
+			PubMed:  pubmed,
+			DOI:     doi,
+		}
+	}
 
 	return nil
 }
@@ -332,7 +421,7 @@ func (u *UniProt) extractSites() {
 		for _, site := range matches {
 			pos, _ := strconv.ParseInt(site[1], 10, 64)
 			u.Sites = append(u.Sites,
-				&Site{
+				Site{
 					Type:     name,
 					Position: pos,
 					Note:     site[2],
