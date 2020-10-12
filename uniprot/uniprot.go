@@ -375,8 +375,10 @@ func (u *UniProt) extractPTMs() error {
 
 	for _, glyco := range matches {
 		pos, _ := strconv.ParseInt(glyco[1], 10, 64)
-		u.PTMs.Glycosilations = append(u.PTMs.Glycosilations,
-			Glycosilation{Position: pos, Note: glyco[2]})
+		if strings.Contains(glyco[2], "N-linked") {
+			u.PTMs.Glycosilations = append(u.PTMs.Glycosilations,
+				Glycosilation{Position: pos, Note: glyco[2]})
+		}
 	}
 
 	// Modified residues
@@ -414,18 +416,35 @@ func (u *UniProt) extractSites() {
 	}
 
 	for tag, name := range tags {
-		r, _ := regexp.Compile("(?ms)^FT[ ]*" + tag + "[ ]*([0-9]*)$.*?note=\"(.*?)\"")
+		r, _ := regexp.Compile(`(?ms)^FT[ ]*` + tag + `[ ]*([0-9\.]*)$.*?note=\"(.*?)\"`)
 		matches := r.FindAllStringSubmatch(string(u.Raw), -1)
 
 		for _, site := range matches {
-			pos, _ := strconv.ParseInt(site[1], 10, 64)
-			u.Sites = append(u.Sites,
-				Site{
-					Type:     name,
-					Position: pos,
-					Note:     site[2],
-				},
-			)
+			posStr := site[1]
+
+			if strings.Contains(posStr, "..") { // range of positions
+				positions := strings.Split(posStr, "..")
+				start, _ := strconv.ParseInt(positions[0], 10, 64)
+				end, _ := strconv.ParseInt(positions[1], 10, 64)
+				for i := start; i <= end; i++ {
+					u.Sites = append(u.Sites,
+						Site{
+							Type:     name,
+							Position: i,
+							Note:     site[2],
+						},
+					)
+				}
+			} else {
+				pos, _ := strconv.ParseInt(site[1], 10, 64)
+				u.Sites = append(u.Sites,
+					Site{
+						Type:     name,
+						Position: pos,
+						Note:     site[2],
+					},
+				)
+			}
 		}
 	}
 }
