@@ -406,10 +406,11 @@ func (u *UniProt) extractPTMs() error {
 // extractSites parses for sites
 func (u *UniProt) extractSites() {
 	tags := map[string]string{
-		"ACT_SITE": "active",  // https://www.uniprot.org/help/act_site
-		"METAL":    "metal",   // https://www.uniprot.org/help/metal
-		"BINDING":  "binding", // https://www.uniprot.org/help/binding
-		"SITE":     "site",    // https://www.uniprot.org/help/site
+		"ACT_SITE": "active",     // https://www.uniprot.org/help/act_site
+		"NP_BIND":  "nucleotide", // https://www.uniprot.org/help/np_bind
+		"METAL":    "metal",      // https://www.uniprot.org/help/metal
+		"BINDING":  "binding",    // https://www.uniprot.org/help/binding
+		"SITE":     "site",       // https://www.uniprot.org/help/site
 	}
 
 	for tag, name := range tags {
