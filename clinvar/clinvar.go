@@ -24,9 +24,9 @@ type ClinVar struct {
 	snps        map[string][]Allele
 }
 
-// Allele represents a variation from ClinVar
+// Allele represents a variant from ClinVar
 type Allele struct {
-	VariationID   string `json:"variationId"`
+	VariantID     string `json:"variantId"`
 	Name          string `json:"name"`
 	ClinSig       string `json:"clinSig"`
 	ClinSigSimple int    `json:"clinSigSimple"`
@@ -84,7 +84,7 @@ func (cv *ClinVar) load() error {
 			change := fromAa + pos + toAa
 			clinSigSimple, _ := strconv.Atoi(line[7])
 			allele := Allele{
-				VariationID:   line[30],
+				VariantID:     line[30],
 				Name:          name,
 				ClinSig:       line[6],
 				ClinSigSimple: clinSigSimple,
@@ -99,7 +99,7 @@ func (cv *ClinVar) load() error {
 	return nil
 }
 
-func (cv *ClinVar) GetVariation(dbSNPID string, proteinChange string) *Allele {
+func (cv *ClinVar) GetVariant(dbSNPID string, proteinChange string) *Allele {
 	if alleles, ok := cv.snps[dbSNPID]; ok {
 		for _, allele := range alleles {
 			if allele.ProteinChange == proteinChange {
