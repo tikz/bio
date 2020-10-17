@@ -165,31 +165,39 @@ func (u *UniProt) extract() error {
 
 // extractPDBs parses the TXT for PDB IDs and populates UniProt.PDBs
 func (u *UniProt) extractPDBs() error {
-	r, _ := regexp.Compile(`(?ms)PDB; (.*?); (.*?); ([\.0-9]*).*?;.*?$`)
-	rStartEnd, _ := regexp.Compile("([0-9]*)-([0-9]*)")
-
-	matches := r.FindAllStringSubmatch(string(u.Raw), -1)
-	// Parse each PDB match in TXT
-	for _, m := range matches {
-		coverage := 0.0
-		rangeMatches := rStartEnd.FindAllStringSubmatch(m[0], -1)
-		for _, rm := range rangeMatches {
-			startPos, _ := strconv.Atoi(rm[1])
-			endPos, _ := strconv.Atoi(rm[2])
-			coverage += float64(endPos - startPos)
-		}
-
-		coverage = coverage / float64(len(u.Sequence))
-		resolution, _ := strconv.ParseFloat(m[3], 64)
-		if m[2] == "X-ray" {
-			u.PDBs = append(u.PDBs, PDB{
-				ID:         m[1],
-				Coverage:   coverage,
-				Method:     m[2],
-				Resolution: resolution,
-			})
-		}
+	// Extract from SIFTS
+	pdbs, err := getSIFTSBestStructures(u.ID)
+	if err != nil {
+		return err
 	}
+
+	u.PDBs = pdbs
+
+	// r, _ := regexp.Compile(`(?ms)PDB; (.*?); (.*?); ([\.0-9]*).*?;.*?$`)
+	// rStartEnd, _ := regexp.Compile("([0-9]*)-([0-9]*)")
+
+	// matches := r.FindAllStringSubmatch(string(u.Raw), -1)
+	// // Parse each PDB match in TXT
+	// for _, m := range matches {
+	// 	coverage := 0.0
+	// 	rangeMatches := rStartEnd.FindAllStringSubmatch(m[0], -1)
+	// 	for _, rm := range rangeMatches {
+	// 		startPos, _ := strconv.Atoi(rm[1])
+	// 		endPos, _ := strconv.Atoi(rm[2])
+	// 		coverage += float64(endPos - startPos)
+	// 	}
+
+	// 	coverage = coverage / float64(len(u.Sequence))
+	// 	resolution, _ := strconv.ParseFloat(m[3], 64)
+	// 	if m[2] == "X-ray" {
+	// 		u.PDBs = append(u.PDBs, PDB{
+	// 			ID:         m[1],
+	// 			Coverage:   coverage,
+	// 			Method:     m[2],
+	// 			Resolution: resolution,
+	// 		})
+	// 	}
+	// }
 
 	return nil
 }
