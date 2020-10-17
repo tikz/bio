@@ -6,7 +6,7 @@ import (
 
 // ResiduesDistance returns the distance between two residues as the minimum atom pair distance.
 func ResiduesDistance(r1 *Residue, r2 *Residue) float64 {
-	minDist := AtomsDistance(r1.Atoms[0], r2.Atoms[1])
+	minDist := AtomsDistance(r1.Atoms[0], r2.Atoms[0])
 	for _, a1 := range r1.Atoms {
 		for _, a2 := range r2.Atoms {
 			dist := AtomsDistance(a1, a2)
