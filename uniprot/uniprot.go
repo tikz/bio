@@ -130,7 +130,7 @@ func (u *UniProt) extract() error {
 
 	err = u.extractPDBs()
 	if err != nil {
-		return fmt.Errorf("extracting crystals from UniProt TXT: %v", err)
+		return fmt.Errorf("extracting crystals from SIFTS: %v", err)
 	}
 
 	err = u.extractNames()

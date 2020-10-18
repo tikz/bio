@@ -20,8 +20,8 @@ func getSIFTSBestStructures(unpID string) ([]PDB, error) {
 	raw, _ := http.Get("https://www.ebi.ac.uk/pdbe/api/mappings/best_structures/" + unpID)
 	unps := make(map[string]json.RawMessage)
 	err := json.Unmarshal(raw, &unps)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshal: %v", err)
+	if err != nil { // Empty JSON, no crystals
+		return []PDB{}, nil
 	}
 
 	var structures []SIFTSBestStructures
