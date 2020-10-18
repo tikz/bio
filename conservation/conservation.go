@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/tikz/bio/pdb"
 	"github.com/tikz/bio/uniprot"
@@ -54,6 +55,7 @@ type Mapping struct {
 // Pfam represents a storage of HMM models.
 type Pfam struct {
 	modelsDir string
+	mutex     sync.Mutex
 }
 
 // NewPfam instantiates the path for storing HMM models.
@@ -66,11 +68,26 @@ func NewPfam(modelsPath string) (*Pfam, error) {
 	if !f.IsDir() {
 		return nil, fmt.Errorf("%s is not a dir", modelsPath)
 	}
-	return &Pfam{modelsDir: modelsPath}, nil
+
+	return &Pfam{modelsDir: modelsPath, mutex: sync.Mutex{}}, nil
 }
 
 // Families creates a slice of Families from a UniProt.
 func (pfam *Pfam) Families(unp *uniprot.UniProt) (fams []*Family, err error) {
+	pfam.mutex.Lock()
+
+	// Write temporary FASTA of sequence
+	fastaPath := os.TempDir() + "/" + unp.ID + ".fasta"
+	err = ioutil.WriteFile(fastaPath, []byte(">"+unp.ID+"\n"+unp.Sequence), 0644)
+	if err != nil {
+		return nil, fmt.Errorf("write FASTA: %v", err)
+	}
+
+	defer func() {
+		os.RemoveAll(fastaPath)
+		pfam.mutex.Unlock()
+	}()
+
 	for _, id := range unp.Pfam {
 		var fam Family
 		fam.ID = id
@@ -86,17 +103,6 @@ func (pfam *Pfam) Families(unp *uniprot.UniProt) (fams []*Family, err error) {
 			continue
 		}
 		fam.HMM = hmm
-
-		// Write temporary FASTA of sequence
-		fastaPath := os.TempDir() + "/" + unp.ID + ".fasta"
-		err = ioutil.WriteFile(fastaPath, []byte(">"+unp.ID+"\n"+unp.Sequence), 0644)
-		if err != nil {
-			return nil, fmt.Errorf("write FASTA: %v", err)
-		}
-
-		defer func() {
-			os.RemoveAll(fastaPath)
-		}()
 
 		// Align using hmmalign
 		mappings, err := align(hmmPath, fastaPath)
