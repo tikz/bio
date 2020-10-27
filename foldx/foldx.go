@@ -96,10 +96,13 @@ func (foldx *FoldX) BuildModelUniProt(repairedPath string, p *pdb.PDB, unpID str
 		return 0, errors.New("no coverage")
 	}
 	res := residues[0]
-	formattedMutant := res.Name1 + res.Chain + strconv.FormatInt(res.StructPosition, 10) + aa
 
-	return foldx.BuildModel(repairedPath, formattedMutant)
+	return foldx.BuildModel(repairedPath, formatMutant(res, aa))
 
+}
+
+func formatMutant(res *pdb.Residue, destAa string) string {
+	return res.Name1 + res.Chain + strconv.FormatInt(res.StructPosition, 10) + destAa
 }
 
 func (foldx *FoldX) BuildModel(repairedPath string, formattedMutant string) (float64, error) {
