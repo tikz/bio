@@ -97,11 +97,12 @@ func (foldx *FoldX) BuildModelUniProt(repairedPath string, p *pdb.PDB, unpID str
 	}
 	res := residues[0]
 
-	return foldx.BuildModel(repairedPath, formatMutant(res, aa))
+	return foldx.BuildModel(repairedPath, FormatMutant(res, aa))
 
 }
 
-func formatMutant(res *pdb.Residue, destAa string) string {
+// FormatMutant returns the aminoacid change in FoldX format (i.e GA123W)
+func FormatMutant(res *pdb.Residue, destAa string) string {
 	return res.Name1 + res.Chain + strconv.FormatInt(res.StructPosition, 10) + destAa
 }
 
