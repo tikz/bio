@@ -89,16 +89,17 @@ func (foldx *FoldX) Repair(p *pdb.PDB) (outFile string, err error) {
 }
 
 // BuildModelUniProt receives a given mutation in UniProt position and returns
-// the PDB position in FoldX format, for only the first chain, i.e.: KA42I;
-func (foldx *FoldX) BuildModelUniProt(repairedPath string, p *pdb.PDB, unpID string, pos int64, aa string) (float64, error) {
+// the ddG of the change for only the first chain, i.e.: KA42I;
+func (foldx *FoldX) BuildModelUniProt(repairedPath string, p *pdb.PDB, unpID string, pos int64, aa string) (string, float64, error) {
 	residues := p.UniProtPositions[unpID][int64(pos)]
 	if len(residues) == 0 {
-		return 0, errors.New("no coverage")
+		return "", 0, errors.New("no coverage")
 	}
 	res := residues[0]
 
-	return foldx.BuildModel(repairedPath, FormatMutant(res, aa))
-
+	mutation := FormatMutant(res, aa)
+	ddg, err := foldx.BuildModel(repairedPath, mutation)
+	return mutation, ddg, err
 }
 
 // FormatMutant returns the aminoacid change in FoldX format (i.e GA123W)
