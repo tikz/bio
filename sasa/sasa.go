@@ -35,9 +35,10 @@ type ResidueSASA struct {
 }
 
 // SASA runs FreeSASA on a PDB and parses the output.
-func SASA(p *pdb.PDB) (sasa Results, err error) {
+func SASA(p *pdb.PDB, resolution int) (sasa Results, err error) {
 	cmd := exec.Command("freesasa",
 		p.PDBPath,
+		"--resolution="+string(resolution),
 		"--format=rsa")
 
 	out, err := cmd.CombinedOutput()
