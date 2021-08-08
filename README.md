@@ -26,6 +26,11 @@ https://pkg.go.dev/github.com/tikz/bio/clinvar
 
 Fetches and loads the [summary](https://www.ncbi.nlm.nih.gov/clinvar/docs/ftp_primer/) of all ClinVar variants to query against it.
 
+## Interaction `tikz/bio/interaction`
+https://pkg.go.dev/github.com/tikz/bio/interaction
+
+Get all residues that are near het groups or water molecules given a distance threshold.
+
 ## SASA `tikz/bio/sasa`
 https://pkg.go.dev/github.com/tikz/bio/sasa
 
