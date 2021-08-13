@@ -1,6 +1,7 @@
 package sasa
 
 import (
+	"fmt"
 	"math"
 	"os/exec"
 	"strconv"
@@ -38,7 +39,7 @@ type ResidueSASA struct {
 func SASA(p *pdb.PDB, resolution int) (sasa Results, err error) {
 	cmd := exec.Command("freesasa",
 		p.PDBPath,
-		"--resolution="+string(resolution),
+		"--resolution="+fmt.Sprint(resolution),
 		"--format=rsa")
 
 	out, err := cmd.CombinedOutput()
