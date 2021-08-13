@@ -1,4 +1,4 @@
-# bio
+# bio [![Go](https://github.com/tikz/bio/actions/workflows/go.yml/badge.svg)](https://github.com/tikz/bio/actions/workflows/go.yml)
 Biological data formats and tool output parsers for Golang.
 
 ## PDB `tikz/bio/pdb`
