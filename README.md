@@ -9,7 +9,7 @@ Fetches and parses PDB files, using the Model/Chain/Residue/Atom architecture.
 ## UniProt `tikz/bio/uniprot`
 https://pkg.go.dev/github.com/tikz/bio/uniprot
 
-Fetches and parses UniProt TXT enties.
+Fetches and parses UniProt TXT entries.
 
 ## Conservation (Pfam) `tikz/bio/conservation`
 https://pkg.go.dev/github.com/tikz/bio/conservation
