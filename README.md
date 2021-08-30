@@ -19,7 +19,7 @@ Fetches a given HMM model from Pfam, aligns it against the given sequence to get
 ## FoldX `tikz/bio/foldx`
 https://pkg.go.dev/github.com/tikz/bio/foldx
 
-A wrapper for [FoldX](http://foldxsuite.crg.eu/) `RepairPDB` and `BuildModel` commands.
+A wrapper for running and parsing [FoldX](http://foldxsuite.crg.eu/) `RepairPDB` and `BuildModel` commands.
 
 ## ClinVar `tikz/bio/clinvar`
 https://pkg.go.dev/github.com/tikz/bio/clinvar
@@ -29,17 +29,17 @@ Fetches and loads the [summary](https://www.ncbi.nlm.nih.gov/clinvar/docs/ftp_pr
 ## Interaction `tikz/bio/interaction`
 https://pkg.go.dev/github.com/tikz/bio/interaction
 
-Get all residues that are near het groups or water molecules given a distance threshold.
+Get all residues that are near het groups or water molecules given a distance threshold from a loaded PDB.
 
 ## SASA `tikz/bio/sasa`
 https://pkg.go.dev/github.com/tikz/bio/sasa
 
-Parses [FreeSASA](https://freesasa.github.io/) command line output.
+Parses [FreeSASA](https://freesasa.github.io/) command line output ran on a single structure.
 
 ## Fpocket `tikz/bio/fpocket`
 https://pkg.go.dev/github.com/tikz/bio/fpocket
 
-A wrapper for running [Fpocket](http://fpocket.sourceforge.net/) and parsing residues marked as pockets.
+A wrapper for running [Fpocket](http://fpocket.sourceforge.net/) and parsing the resulting residues marked as pockets.
 
 ## DSSP `tikz/bio/dssp`
 https://pkg.go.dev/github.com/tikz/bio/dssp
@@ -49,9 +49,9 @@ A wrapper for running [DSSP](https://swift.cmbi.umcn.nl/gv/dssp/) and parsing th
 ## Tango `tikz/bio/tango`
 https://pkg.go.dev/github.com/tikz/bio/tango
 
-Parser for the [Tango](http://tango.crg.es/) tool output.
+Runner and parser for the [Tango](http://tango.crg.es/) tool output.
 
 ## abSwitch `tikz/bio/abswitch`
 https://pkg.go.dev/github.com/tikz/bio/abswitch
 
-Parser for the abSwitch tool output.
+Runner and parser for the abSwitch tool output.
