@@ -20,14 +20,8 @@ import (
 )
 
 // http://www.ebi.ac.uk/uniprot/TrEMBLstats
-// Ala (A) 9.22   Gln (Q) 3.76   Leu (L) 9.90   Ser (S) 6.65
-// Arg (R) 5.80   Glu (E) 6.17   Lys (K) 4.90   Thr (T) 5.55
-// Asn (N) 3.80   Gly (G) 7.35   Met (M) 2.36   Trp (W) 1.30
-// Asp (D) 5.48   His (H) 2.19   Phe (F) 3.91   Tyr (Y) 2.90
-// Cys (C) 1.20   Ile (I) 5.62   Pro (P) 4.89   Val (V) 6.92
-
 //                          A     C     D     E     F     G     H     I     K     L     M     N     P     Q     R     S     T     V     W     Y
-var abundance = [20]float64{9.22, 1.20, 5.48, 6.17, 3.91, 7.35, 2.19, 5.62, 4.90, 9.90, 2.36, 3.80, 4.89, 3.76, 5.80, 6.65, 5.55, 6.92, 1.30, 2.90}
+var abundance = [20]float64{9.06, 1.28, 5.46, 6.23, 3.88, 7.27, 2.22, 5.54, 4.93, 9.88, 2.34, 3.79, 4.97, 3.81, 5.82, 6.79, 5.55, 6.87, 1.30, 2.88}
 
 // Family represents a family from Pfam mapped to a sequence.
 type Family struct {
@@ -42,7 +36,9 @@ type HMM struct {
 	Desc         string
 	ConsensusAas []string
 	MatchEms     [][20]float64
+	MatchPs      [][20]float64
 	Bitscores    []float64
+	Entropies    []float64
 }
 
 // Mapping holds equivalent positions between sequence and HMM.
@@ -50,6 +46,7 @@ type Mapping struct {
 	Position      int
 	PositionModel int
 	Bitscore      float64
+	Entropy       float64
 }
 
 // Pfam represents a storage of HMM models.
@@ -115,6 +112,7 @@ func (pfam *Pfam) Families(unp *uniprot.UniProt) (fams []*Family, err error) {
 				Position:      m[0] + 1,
 				PositionModel: m[1] + 1,
 				Bitscore:      hmm.Bitscores[m[1]],
+				Entropy:       hmm.Entropies[m[1]],
 			})
 		}
 
@@ -164,7 +162,7 @@ func (pfam *Pfam) getHMM(id string) (*HMM, error) {
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	io.Copy(out, resp.Body)
 
 	return loadHMM(hmmPath)
 }
@@ -174,6 +172,20 @@ func posBitscore(matchEms [20]float64) (sum float64) {
 		sum += math.Exp(-m) * math.Log2(math.Exp(-m)/(abundance[i]/100))
 	}
 	return sum
+}
+
+func posEntropy(matchEms [20]float64) (sum float64) {
+	for _, m := range matchEms {
+		sum += math.Exp(-m) * math.Log2(math.Exp(-m))
+	}
+	return -sum
+}
+
+func posPs(matchEms [20]float64) (matchPs [20]float64) {
+	for i, m := range matchEms {
+		matchPs[i] = math.Exp(-m)
+	}
+	return matchPs
 }
 
 func loadHMM(path string) (*HMM, error) {
@@ -224,7 +236,9 @@ func loadHMM(path string) (*HMM, error) {
 
 			hmm.ConsensusAas = append(hmm.ConsensusAas, strings.ToUpper(fields[22]))
 			hmm.MatchEms = append(hmm.MatchEms, matchEms)
+			hmm.MatchPs = append(hmm.MatchPs, posPs(matchEms))
 			hmm.Bitscores = append(hmm.Bitscores, posBitscore(matchEms))
+			hmm.Entropies = append(hmm.Entropies, posEntropy(matchEms))
 		}
 		line++
 	}
