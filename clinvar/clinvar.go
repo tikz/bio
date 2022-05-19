@@ -21,7 +21,7 @@ const (
 
 type ClinVar struct {
 	summaryPath string
-	snps        map[string][]Allele
+	SNPs        map[string][]Allele
 }
 
 // Allele represents a variant from ClinVar
@@ -33,6 +33,9 @@ type Allele struct {
 	ProteinChange string `json:"proteinChange"`
 	ReviewStatus  string `json:"reviewStatus"`
 	Phenotypes    string `json:"phenotypes"`
+	Chromosome    uint   `json:"chromosome"`
+	Start         uint64 `json:"start"`
+	End           uint64 `json:"end"`
 }
 
 func NewClinVar(clinvarDir string) (*ClinVar, error) {
@@ -53,7 +56,7 @@ func NewClinVar(clinvarDir string) (*ClinVar, error) {
 
 	cv := &ClinVar{}
 	cv.summaryPath = summaryPath
-	cv.snps = make(map[string][]Allele)
+	cv.SNPs = make(map[string][]Allele)
 	err = cv.load()
 
 	return cv, err
@@ -92,7 +95,7 @@ func (cv *ClinVar) load() error {
 				ReviewStatus:  line[24],
 				Phenotypes:    line[13],
 			}
-			cv.snps["rs"+dbSNPID] = append(cv.snps["rs"+dbSNPID], allele)
+			cv.SNPs["rs"+dbSNPID] = append(cv.SNPs["rs"+dbSNPID], allele)
 			alleles++
 		}
 	}
@@ -100,7 +103,7 @@ func (cv *ClinVar) load() error {
 }
 
 func (cv *ClinVar) GetVariant(dbSNPID string, proteinChange string) *Allele {
-	if alleles, ok := cv.snps[dbSNPID]; ok {
+	if alleles, ok := cv.SNPs[dbSNPID]; ok {
 		for _, allele := range alleles {
 			if allele.ProteinChange == proteinChange {
 				return &allele
