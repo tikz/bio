@@ -33,7 +33,7 @@ type Allele struct {
 	ProteinChange string `json:"proteinChange"`
 	ReviewStatus  string `json:"reviewStatus"`
 	Phenotypes    string `json:"phenotypes"`
-	Chromosome    uint   `json:"chromosome"`
+	Chromosome    uint64 `json:"chromosome"`
 	Start         uint64 `json:"start"`
 	End           uint64 `json:"end"`
 }
@@ -75,17 +75,26 @@ func (cv *ClinVar) load() error {
 		line := strings.Split(s.Text(), "\t")
 		variantType := line[1]
 		name := line[2]
-		synonymous := strings.Index(name, "=") != -1
+		// synonymous := strings.Index(name, "=") != -1
 		m := r.FindAllStringSubmatch(name, -1)
 		coding := len(m) > 0
 		assembly := line[16] == "GRCh38"
-		if variantType == "single nucleotide variant" && coding && !synonymous && assembly {
+		// if variantType == "single nucleotide variant" && coding && !synonymous && assembly {
+		if assembly {
 			dbSNPID := line[9]
-			_, _, fromAa := pdb.AminoacidNames(m[0][1])
-			_, _, toAa := pdb.AminoacidNames(m[0][3])
-			pos := m[0][2]
-			change := fromAa + pos + toAa
+
+			var change string
+			if variantType == "single nucleotide variant" && coding {
+				_, _, fromAa := pdb.AminoacidNames(m[0][1])
+				_, _, toAa := pdb.AminoacidNames(m[0][3])
+				pos := m[0][2]
+				change = fromAa + pos + toAa
+			}
+
 			clinSigSimple, _ := strconv.Atoi(line[7])
+			chromosome, _ := strconv.ParseUint(line[18], 10, 64)
+			start, _ := strconv.ParseUint(line[19], 10, 64)
+			end, _ := strconv.ParseUint(line[20], 10, 64)
 			allele := Allele{
 				VariantID:     line[30],
 				Name:          name,
@@ -94,7 +103,11 @@ func (cv *ClinVar) load() error {
 				ProteinChange: change,
 				ReviewStatus:  line[24],
 				Phenotypes:    line[13],
+				Chromosome:    chromosome,
+				Start:         start,
+				End:           end,
 			}
+
 			cv.SNPs["rs"+dbSNPID] = append(cv.SNPs["rs"+dbSNPID], allele)
 			alleles++
 		}
