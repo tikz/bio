@@ -33,7 +33,7 @@ type Allele struct {
 	ProteinChange string `json:"proteinChange"`
 	ReviewStatus  string `json:"reviewStatus"`
 	Phenotypes    string `json:"phenotypes"`
-	Chromosome    uint64 `json:"chromosome"`
+	Chromosome    string `json:"chromosome"`
 	Start         uint64 `json:"start"`
 	End           uint64 `json:"end"`
 }
@@ -92,7 +92,7 @@ func (cv *ClinVar) load() error {
 			}
 
 			clinSigSimple, _ := strconv.Atoi(line[7])
-			chromosome, _ := strconv.ParseUint(line[18], 10, 64)
+			chromosome := line[18]
 			start, _ := strconv.ParseUint(line[19], 10, 64)
 			end, _ := strconv.ParseUint(line[20], 10, 64)
 			allele := Allele{
