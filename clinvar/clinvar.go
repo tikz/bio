@@ -96,7 +96,7 @@ func (cv *ClinVar) load() error {
 			start, _ := strconv.ParseUint(line[19], 10, 64)
 			end, _ := strconv.ParseUint(line[20], 10, 64)
 			allele := Allele{
-				VariantID:     line[30],
+				VariantID:     dbSNPID,
 				Name:          name,
 				ClinSig:       line[6],
 				ClinSigSimple: clinSigSimple,
