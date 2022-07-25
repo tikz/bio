@@ -18,6 +18,7 @@ func Get(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Accept-Encoding", "text/html")
 
 	res, err := client.Do(req)
 	if err != nil {
